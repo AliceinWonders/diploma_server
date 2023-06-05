@@ -1,18 +1,28 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using diploma_server.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace diploma_server.Controllers
 {
     [Route("{controller}")]
     public class ArticlesController: ControllerBase
     {
+        private readonly IConfiguration _configuration;
+
+        public ArticlesController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         [HttpGet]
         [Route("searchByContent/{q}")]
         public async Task<IActionResult> SearchByContent(string q)
@@ -96,6 +106,24 @@ namespace diploma_server.Controllers
             }
 
             return Ok();
+        }
+        
+        [HttpPost("addNewTravelPhotoById")]
+        public async Task<ActionResult> AddNewConferencePhoto(IFormFile uploadedFile )
+        {
+            if (uploadedFile != null)
+            {
+                // путь к папке Files
+                string path = $"{_configuration["PathTravelPhoto"]}\\{uploadedFile.FileName}";
+                // сохраняем файл в папку Files в каталоге wwwroot
+                using (var fileStream = new FileStream(path, FileMode.Create))
+                {
+                    await uploadedFile.CopyToAsync(fileStream);
+                }
+                return Ok();
+            }
+
+            return BadRequest();
         }
     }
 }
